@@ -1,7 +1,7 @@
 # Geomatch-Defender
 Equipe:
-Izabella Catrinck
-Renato Barbosa
-Ryan da Silva
-Vinicius Souza
-Oziel Bezerra
+Izabella Catrinck \n
+Renato Barbosa \n
+Ryan da Silva \n
+Vinicius Souza \n
+Oziel Bezerra \n
