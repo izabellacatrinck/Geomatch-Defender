@@ -21,24 +21,24 @@ class PADDLE:
     direction = None
 
     #função de início
-    def __init__(self, x, y, width, height, VELOCIDADE=10):
-        self.VELOCIDADE = 10
+    def __init__(self, x, y, width, height, VELOCIDADE = 6):
+        self.VELOCIDADE = VELOCIDADE
         self.width = width
         self.height = height
-        self.speed = VELOCIDADE
         self.screen_width = S_WIDTH
         self.screen_height = S_HEIGHT
         self.x = (S_WIDTH - self.width) // 2
         self.y = S_HEIGHT - self.height - 10
+        self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.direction = 0
 
-    def move(self):
+    def move(self, dt):
         self.direction = 0
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_a] and self.rect.left > 0:
+        if keys[pygame.K_LEFT] and self.rect.left > 0:
             self.x -= self.VELOCIDADE
             self.direction = -1
-        if keys[pygame.K_d] and self.rect.right < S_WIDTH:
+        if keys[pygame.K_RIGHT] and self.rect.right < S_WIDTH:
             self.x += self.VELOCIDADE
             self.direction = 1
         self.rect.x = self.x
@@ -52,9 +52,11 @@ class PADDLE:
         pygame.draw.polygon(screen, color, vertices)
 
 paddle = PADDLE(0, 0, 50, 50)
+clock = pygame.time.Clock()
 
 #GAME LOOP
 while True:
+    dt = clock.tick(FPS) / 1000.0
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
             pygame.quit()
@@ -62,4 +64,5 @@ while True:
 
     screen.fill(BG)
     paddle.draw(screen)
+    paddle.move(dt)
     pygame.display.flip()
