@@ -21,8 +21,9 @@ class PADDLE:
     direction = None
 
     #função de início
-    def __init__(self, x, y, width, height, VELOCIDADE = 6):
+    def __init__(self, x, y, width, height, VELOCIDADE = 6, TIRO_VELOCIDADE = 230):
         self.VELOCIDADE = VELOCIDADE
+        self.TIRO_VELOCIDADE = TIRO_VELOCIDADE
         self.width = width
         self.height = height
         self.screen_width = S_WIDTH
@@ -31,6 +32,7 @@ class PADDLE:
         self.y = S_HEIGHT - self.height - 10
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.direction = 0
+        self.shots = []
 
     def move(self, dt):
         self.direction = 0
@@ -51,6 +53,21 @@ class PADDLE:
         color = (255, 0 ,0)
         pygame.draw.polygon(screen, color, vertices)
 
+    #mecânica de tiro
+    def throw (self):
+        new_throw = {'x': self.x + self.width // 2, 'y': self.y,
+                     'rect': pygame.Rect(self.x + self.width // 2, self.y, 5, 10)}
+        self.shots.append(new_throw)
+
+    def move_shots (self, dt):
+        for shot in self.shots:
+            shot['y'] -= self.TIRO_VELOCIDADE * dt
+
+    def draw_shots (self, screen):
+        for shot in self.shots:
+            pygame.draw.rect(screen, (255, 255, 255), (shot['x'], shot['y'], 5, 10))
+
+
 paddle = PADDLE(0, 0, 50, 50)
 clock = pygame.time.Clock()
 
@@ -61,8 +78,13 @@ while True:
         if evento.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        if evento.type == pygame.KEYDOWN:
+            if evento.key == pygame.K_s:
+                paddle.throw()
 
     screen.fill(BG)
     paddle.draw(screen)
     paddle.move(dt)
+    paddle.draw_shots(screen)
+    paddle.move_shots(dt)
     pygame.display.flip()
