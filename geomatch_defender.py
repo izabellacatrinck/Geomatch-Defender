@@ -97,10 +97,23 @@ class PADDLE:
 
     # mecânica de tiro
     def throw(self):
-        new_throw = {'x': self.x + self.width // 2, 'y': self.y,
-                     'rect': pygame.Rect(self.x + self.width // 2, self.y, 5, 10)}
-        self.shots.append(new_throw)
+        if shape_counter == 0:
+            new_throw = {'x': self.x + self.width // 2, 'y': self.y,
+                        'rect': pygame.Rect(self.x + self.width // 2, self.y, 5, 10),
+                        'shot_from': "triangle"}
+            self.shots.append(new_throw)
+        elif shape_counter == 1:
+            new_throw = {'x': self.x + self.width // 2, 'y': self.y,
+                         'rect': pygame.Rect(self.x + self.width // 2, self.y, 5, 10),
+                         'shot_from': "circle"}
+            self.shots.append(new_throw)
+        elif shape_counter == 2:
+            new_throw = {'x': self.x + self.width // 2, 'y': self.y,
+                         'rect': pygame.Rect(self.x + self.width // 2, self.y, 5, 10),
+                         'shot_from': "square"}
+            self.shots.append(new_throw)
         lazer_sound.play()
+
 
     def move_shots(self, dt):
         for shot in self.shots:
@@ -141,14 +154,22 @@ class Shape:
 
 
 def check_collision(shots, shapes):
+    global score, disharmony_count
     for shot in shots:
         shot_rect = pygame.Rect(shot['x'], shot['y'], 5, 10)
         for shape in shapes:
             if pygame.Rect(shape.x - 20, shape.y - 20, 40, 40).colliderect(shot_rect):
                 shapes.remove(shape)
                 shots.remove(shot)
-                return True
-    return False
+                if shot['shot_from'] != shape.shape_type:
+                    if shape.shape_type == "triangle":
+                        score += 5
+                    elif shape.shape_type == "square":
+                        score += 10
+                    elif shape.shape_type == "circle":
+                        score += 15
+                else:
+                    disharmony_count += 1
 
 
 def shape_escaped(shapes):
@@ -187,6 +208,7 @@ while True:
     paddle.move(dt)
     paddle.draw_shots(screen)
     paddle.move_shots(dt)
+    check_collision(paddle.shots, shapes)
 
     current_time = pygame.time.get_ticks()
 
@@ -202,27 +224,27 @@ while True:
         shape.move(dt)
         shape.draw(screen)
 
-    # score update
-    if check_collision(paddle.shots, shapes):
-        score += 1
-        print("Collision with player!")
-
     # check if shape reached the bottom
     if shape_escaped(shapes):
         disharmony_count += 1
-        print(disharmony_count)
 
     # disharmony updates
     collision_shapes = paddle.check_collision_paddle(shapes)
     if collision_shapes:
-        print("Collision with player!")
-        disharmony_count += 1
         impact_sound.play()
         for shape in collision_shapes:
+            if shape.shape_type == "triangle" and shape_counter == 0:
+                score += 5
+            elif shape.shape_type == "square" and shape_counter == 2:
+                score += 10
+            elif shape.shape_type == "circle" and shape_counter == 1:
+                score += 15
+            else:
+                disharmony_count += 1
             shapes.remove(shape)
 
     # game over system
-    if disharmony_count > 3:
+    if disharmony_count == 3:
         sound_track.stop()
         screen.fill((0, 0, 0))
         game_over_text = game_over_font.render(f'Game Over', True, WHITE)
