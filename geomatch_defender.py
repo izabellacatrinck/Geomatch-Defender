@@ -5,6 +5,8 @@ import random
 pygame.init()
 pygame.font.init()
 font = pygame.font.Font(None, 36)
+game_over_font = pygame.font.Font('PressStart2P.ttf', 40)
+press_enter_font = pygame.font.Font('PressStart2P.ttf', 25)
 
 # const
 S_WIDTH = 700
@@ -14,17 +16,41 @@ FPS = 60
 score = 0
 disharmony_count = 0
 shape_counter = 0
+WHITE = (255, 255, 255)
 
+#efeitos sonoros
+lazer_sound = pygame.mixer.Sound('8-Bit Laser Gun Sound Effect (cut.).mp3')
+impact_sound = pygame.mixer.Sound('8 bit impact sound effect (volume up).mp3')
+sound_track = pygame.mixer.Sound('geomatch_soundtrack.mp3')
+game_over_sound = pygame.mixer.Sound('game over - sound effect.mp3')
 # creating screen
 screen = pygame.display.set_mode((S_WIDTH, S_HEIGHT))
 pygame.display.set_caption('Geomatch Defender')
+sound_track.play()
 
+fundo = pygame.image.load('Imagem_menu_Geomath.png')
+screen.blit(fundo, (0, 0))
+class main_menu:
 
+    loop = True
+    while loop:
+        press_enter_text = press_enter_font.render(f'Press the enter key to play', True, WHITE)
+        press_enter_text_rect = press_enter_text.get_rect(center=(S_WIDTH // 2, S_HEIGHT // 1.4))
+        screen.blit(press_enter_text, press_enter_text_rect)
+        pygame.display.flip()
+        for events in pygame.event.get():
+            if events.type == pygame.KEYDOWN:
+                if events.key == pygame.K_KP_ENTER or events.key == pygame.K_RETURN:
+                    is_pressing_enter = True
+                    loop = False
+        pygame.display.update()
 # classe do paddle ainda com as funções mais básicas
+
+
 class PADDLE:
     direction = None
-
     # função de início
+
     def __init__(self, x, y, width, height, VELOCIDADE=6, TIRO_VELOCIDADE=230):
         self.VELOCIDADE = VELOCIDADE
         self.TIRO_VELOCIDADE = TIRO_VELOCIDADE
@@ -86,6 +112,8 @@ class PADDLE:
                          'rect': pygame.Rect(self.x + self.width // 2, self.y, 5, 10),
                          'shot_from': "square"}
             self.shots.append(new_throw)
+        lazer_sound.play()
+
 
     def move_shots(self, dt):
         for shot in self.shots:
@@ -160,8 +188,8 @@ clock = pygame.time.Clock()
 
 # GAME LOOP
 while True:
-    disharmony_text = font.render(f"Disharmony: {disharmony_count}", True, (255, 255, 255))
-    score_text = font.render(f"Score: {score}", True, (255, 255, 255))
+    disharmony_text = font.render(f"Disharmony: {disharmony_count}", True, WHITE)
+    score_text = font.render(f"Score: {score}", True, WHITE)
     dt = clock.tick(FPS) / 1000.0
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -203,6 +231,7 @@ while True:
     # disharmony updates
     collision_shapes = paddle.check_collision_paddle(shapes)
     if collision_shapes:
+        impact_sound.play()
         for shape in collision_shapes:
             if shape.shape_type == "triangle" and shape_counter == 0:
                 score += 5
@@ -216,6 +245,14 @@ while True:
 
     # game over system
     if disharmony_count == 3:
+        sound_track.stop()
+        screen.fill((0, 0, 0))
+        game_over_text = game_over_font.render(f'Game Over', True, WHITE)
+        game_over_text_rect= game_over_text.get_rect(center=(S_WIDTH//2, S_HEIGHT//2))
+        screen.blit(game_over_text, game_over_text_rect)
+        pygame.display.flip()
+        game_over_sound.play()
+        pygame.time.delay(2000)
         pygame.quit()
         sys.exit()
 
