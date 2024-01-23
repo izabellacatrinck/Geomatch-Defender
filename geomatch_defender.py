@@ -126,7 +126,7 @@ class Shape:
 
 
 def check_collision(shots, shapes):
-    global score
+    global score, disharmony_count
     for shot in shots:
         shot_rect = pygame.Rect(shot['x'], shot['y'], 5, 10)
         for shape in shapes:
@@ -140,6 +140,8 @@ def check_collision(shots, shapes):
                         score += 10
                     elif shape.shape_type == "circle":
                         score += 15
+                else:
+                    disharmony_count += 1
 
 
 def shape_escaped(shapes):
