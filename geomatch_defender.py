@@ -1,7 +1,6 @@
 import pygame
 import sys
 import random
-from pygame.locals import *
 
 pygame.init()
 pygame.font.init()
@@ -14,10 +13,12 @@ BG = (0, 0, 0)
 FPS = 60
 score = 0
 disharmony_count = 0
+shape_counter = 0
 
 # creating screen
 screen = pygame.display.set_mode((S_WIDTH, S_HEIGHT))
 pygame.display.set_caption('Geomatch Defender')
+
 
 # classe do paddle ainda com as funções mais básicas
 class PADDLE:
@@ -48,13 +49,25 @@ class PADDLE:
             self.direction = 1
         self.rect.x = self.x
 
-    # função para desenhar o paddle inicialmente como um triângulo
-    def draw(self, screen):
-        vertices = [(self.x + self.width // 2, self.y),
-                    (self.x, self.y + self.height),
-                    (self.x + self.width, self.y + self.height)]
-        color = (255, 0, 0)
-        pygame.draw.polygon(screen, color, vertices)
+    # função para desenhar o paddle
+    def draw(self, screen, shape_type_paddle):
+        if shape_type_paddle == 0:
+            vertices = [(self.x + self.width // 2, self.y),
+                        (self.x, self.y + self.height),
+                        (self.x + self.width, self.y + self.height)]
+            color = (255, 0, 0)
+            pygame.draw.polygon(screen, color, vertices)
+        elif shape_type_paddle == 1:
+            pygame.draw.circle(screen, (255, 255, 0), (int(self.x) + 28, int(self.y) + 28), 20)
+        elif shape_type_paddle == 2:
+            pygame.draw.rect(screen, (0, 0, 255), (int(self.x) + 8, int(self.y) + 8, 40, 40))
+
+    # Função usada para determinar o tipo de paddle
+    def change(self):
+        global shape_counter
+        shape_counter += 1
+        if shape_counter == 3:
+            shape_counter = 0
 
     # mecânica de tiro
     def throw(self):
@@ -77,6 +90,7 @@ class PADDLE:
                 collision_shapes.append(shape)
         return collision_shapes
 
+
 class Shape:
     def __init__(self, x, y, shape_type, speed):
         self.x = x
@@ -92,6 +106,12 @@ class Shape:
             pygame.draw.circle(screen, (255, 255, 0), (int(self.x), int(self.y)), 20)
         elif self.shape_type == "square":
             pygame.draw.rect(screen, (0, 0, 255), (int(self.x) - 20, int(self.y) - 20, 40, 40))
+        elif self.shape_type == "triangle":
+            vertices = [(self.x + 50 // 2, self.y),
+                        (self.x, self.y + 50),
+                        (self.x + 50, self.y + 50)]
+            pygame.draw.polygon(screen, (255, 0, 0), vertices)
+
 
 def check_collision(shots, shapes):
     for shot in shots:
@@ -103,8 +123,17 @@ def check_collision(shots, shapes):
                 return True
     return False
 
+
+def shape_escaped(shapes):
+    for shape in shapes:
+        if shape.y >= S_HEIGHT:
+            shapes.remove(shape)
+            return True
+    return False
+
+
 shapes = []
-next_spawn_time = pygame.time.get_ticks() + 2000 # primeira queda
+next_spawn_time = pygame.time.get_ticks() + 2000  # primeira queda
 
 paddle = PADDLE(0, 0, 50, 50)
 clock = pygame.time.Clock()
@@ -121,11 +150,13 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 paddle.throw()
+            if event.key == pygame.K_DOWN:
+                paddle.change()
 
     screen.fill(BG)
     screen.blit(score_text, (10, 10))
     screen.blit(disharmony_text, (S_WIDTH - disharmony_text.get_width() - 10, 10))
-    paddle.draw(screen)
+    paddle.draw(screen, shape_counter)
     paddle.move(dt)
     paddle.draw_shots(screen)
     paddle.move_shots(dt)
@@ -133,23 +164,28 @@ while True:
     current_time = pygame.time.get_ticks()
 
     if current_time >= next_spawn_time:
-        x = random.randint(0, S_WIDTH)
+        x = random.randint(20, S_WIDTH - 50)
         y = 0
-        shape_type = random.choice(["circle", "square"])
-        speed = random.randint(50, 150) 
+        shape_type = random.choice(["circle", "square", "triangle"])
+        speed = random.randint(50, 150)
         shapes.append(Shape(x, y, shape_type, speed))
-        next_spawn_time = current_time + 1000 # velocidade de queda após a primeira
+        next_spawn_time = current_time + 1000  # velocidade de queda após a primeira
 
     for shape in shapes:
         shape.move(dt)
         shape.draw(screen)
 
-    #score update
+    # score update
     if check_collision(paddle.shots, shapes):
         score += 1
         print("Collision with player!")
 
-    #disharmony updates
+    # check if shape reached the bottom
+    if shape_escaped(shapes):
+        disharmony_count += 1
+        print(disharmony_count)
+
+    # disharmony updates
     collision_shapes = paddle.check_collision_paddle(shapes)
     if collision_shapes:
         print("Collision with player!")
