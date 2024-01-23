@@ -4,12 +4,16 @@ import random
 from pygame.locals import *
 
 pygame.init()
+pygame.font.init()
+font = pygame.font.Font(None, 36)
 
 # const
 S_WIDTH = 700
 S_HEIGHT = 700
 BG = (0, 0, 0)
 FPS = 60
+score = 0
+disharmony_count = 0
 
 # creating screen
 screen = pygame.display.set_mode((S_WIDTH, S_HEIGHT))
@@ -67,10 +71,11 @@ class PADDLE:
             pygame.draw.rect(screen, (255, 255, 255), (shot['x'], shot['y'], 5, 10))
 
     def check_collision_paddle(self, shapes):
+        collision_shapes = []
         for shape in shapes:
             if self.rect.colliderect(pygame.Rect(shape.x - 20, shape.y - 20, 40, 40)):
-                return True
-        return False
+                collision_shapes.append(shape)
+        return collision_shapes
 
 class Shape:
     def __init__(self, x, y, shape_type, speed):
@@ -95,6 +100,7 @@ def check_collision(shots, shapes):
             if pygame.Rect(shape.x - 20, shape.y - 20, 40, 40).colliderect(shot_rect):
                 shapes.remove(shape)
                 shots.remove(shot)
+                return True
     return False
 
 shapes = []
@@ -105,6 +111,8 @@ clock = pygame.time.Clock()
 
 # GAME LOOP
 while True:
+    disharmony_text = font.render(f"Disharmony: {disharmony_count}", True, (255, 255, 255))
+    score_text = font.render(f"Score: {score}", True, (255, 255, 255))
     dt = clock.tick(FPS) / 1000.0
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -115,6 +123,8 @@ while True:
                 paddle.throw()
 
     screen.fill(BG)
+    screen.blit(score_text, (10, 10))
+    screen.blit(disharmony_text, (S_WIDTH - disharmony_text.get_width() - 10, 10))
     paddle.draw(screen)
     paddle.move(dt)
     paddle.draw_shots(screen)
@@ -134,13 +144,21 @@ while True:
         shape.move(dt)
         shape.draw(screen)
 
+    #score update
     if check_collision(paddle.shots, shapes):
+        score += 1
         print("Collision with player!")
-        pygame.quit()
-        sys.exit()
 
-    if paddle.check_collision_paddle(shapes):
+    #disharmony updates
+    collision_shapes = paddle.check_collision_paddle(shapes)
+    if collision_shapes:
         print("Collision with player!")
+        disharmony_count += 1
+        for shape in collision_shapes:
+            shapes.remove(shape)
+
+    # game over system
+    if disharmony_count > 3:
         pygame.quit()
         sys.exit()
 
