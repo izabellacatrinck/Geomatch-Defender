@@ -184,7 +184,6 @@ while True:
     if shape_escaped(shapes):
         disharmony_count += 1
 
-
     # disharmony updates
     collision_shapes = paddle.check_collision_paddle(shapes)
     if collision_shapes:
